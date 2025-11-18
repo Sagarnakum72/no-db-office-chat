@@ -1264,4 +1264,294 @@ input[type="text"]:focus {
 
 .message-status.seen {
   animation: seenPulse 0.5s ease;
+}/* 
+Theme Selector */
+.theme-section {
+  padding: 1.25rem;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  border-radius: 16px;
+  border: 2px solid rgba(102, 126, 234, 0.1);
+  margin-bottom: 1rem;
+}
+
+.theme-section h3 {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.theme-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.theme-btn {
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.theme-btn:hover {
+  transform: translateX(5px);
+  box-shadow: var(--shadow-md);
+}
+
+.theme-btn.active {
+  border-color: var(--primary-color);
+  background: rgba(102, 126, 234, 0.1);
+  color: var(--primary-color);
+}
+
+/* Professional Theme (Default) */
+:root {
+  --theme-primary: #667eea;
+  --theme-secondary: #764ba2;
+  --theme-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --theme-accent: rgba(102, 126, 234, 0.1);
+}
+
+/* Love Theme */
+body[data-theme="love"] {
+  --theme-primary: #ff6b9d;
+  --theme-secondary: #c44569;
+  --theme-bg: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+  --theme-accent: rgba(255, 107, 157, 0.1);
+  --primary-color: #ff6b9d;
+  --primary-hover: #e55a8a;
+  --sidebar-bg: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+  --message-user-bg: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+}
+
+body[data-theme="love"] .container {
+  background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+}
+
+body[data-theme="love"] .theme-btn.active {
+  border-color: #ff6b9d;
+  background: rgba(255, 107, 157, 0.1);
+  color: #ff6b9d;
+}
+
+/* Nature Theme */
+body[data-theme="nature"] {
+  --theme-primary: #27ae60;
+  --theme-secondary: #2ecc71;
+  --theme-bg: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  --theme-accent: rgba(39, 174, 96, 0.1);
+  --primary-color: #27ae60;
+  --primary-hover: #229954;
+  --sidebar-bg: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  --message-user-bg: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+}
+
+body[data-theme="nature"] .container {
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+}
+
+body[data-theme="nature"] .theme-btn.active {
+  border-color: #27ae60;
+  background: rgba(39, 174, 96, 0.1);
+  color: #27ae60;
+}
+
+/* Theme-specific message reactions */
+body[data-theme="love"] .reaction-btn {
+  border-color: rgba(255, 107, 157, 0.3);
+}
+
+body[data-theme="love"] .reaction-btn:hover {
+  border-color: #ff6b9d;
+}
+
+body[data-theme="nature"] .reaction-btn {
+  border-color: rgba(39, 174, 96, 0.3);
+}
+
+body[data-theme="nature"] .reaction-btn:hover {
+  border-color: #27ae60;
+}
+
+/* Responsive theme selector */
+@media (max-width: 768px) {
+  .theme-selector {
+    flex-direction: row;
+    gap: 0.25rem;
+  }
+  
+  .theme-btn {
+    flex: 1;
+    font-size: 0.8rem;
+    padding: 0.5rem;
+    text-align: center;
+  }
+}/
+* Logout Button */
+.btn-logout {
+  width: 100%;
+  margin-top: 1rem;
+  background: rgba(220, 53, 69, 0.1) !important;
+  color: #dc3545 !important;
+  border: 2px solid rgba(220, 53, 69, 0.3) !important;
+  font-size: 0.9rem;
+  padding: 0.75rem;
+}
+
+.btn-logout:hover {
+  background: rgba(220, 53, 69, 0.2) !important;
+  border-color: #dc3545 !important;
+  transform: translateY(-1px);
+}
+
+/* Session indicator */
+.user-info .status-indicator {
+  background-color: var(--success-color);
+  animation: pulse 2s infinite;
+}
+
+/* Make logout function globally available */
+window.logout = logout;/*
+ WhatsApp-style Message Status */
+.message-status {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  opacity: 0.8;
+  margin-top: 0.25rem;
+  transition: all 0.3s ease;
+}
+
+.message-status .status-icon {
+  font-size: 0.8rem;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+.message-status.sent .status-icon {
+  color: #9e9e9e;
+}
+
+.message-status.delivered .status-icon {
+  color: #9e9e9e;
+}
+
+.message-status.read .status-icon {
+  color: #4fc3f7 !important;
+  animation: readPulse 0.5s ease;
+}
+
+.message-status.read .status-text {
+  color: #4fc3f7;
+  font-weight: 600;
+}
+
+@keyframes readPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* Enhanced message footer */
+.message-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 0.5rem;
+  gap: 0.5rem;
+}
+
+.user-message .message-footer {
+  flex-direction: row-reverse;
+}
+
+.other-message .message-footer {
+  flex-direction: row;
+}
+
+/* Status tooltip */
+.message-status[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* Session persistence indicator */
+.user-info .status-indicator {
+  position: relative;
+}
+
+.user-info .status-indicator::after {
+  content: 'Session Active';
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  color: var(--success-color);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Enhanced logout button with confirmation */
+.btn-logout {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-logout::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(220, 53, 69, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+}
+
+.btn-logout:hover::before {
+  width: 200px;
+  height: 200px;
+}
+
+/* Mobile optimizations for status */
+@media (max-width: 768px) {
+  .message-status {
+    font-size: 0.65rem;
+  }
+  
+  .message-status .status-icon {
+    font-size: 0.7rem;
+  }
+  
+  .message-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .user-message .message-footer {
+    align-items: flex-end;
+  }
 }

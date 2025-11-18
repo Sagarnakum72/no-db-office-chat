@@ -38,12 +38,30 @@
         <div class="status-indicator"></div>
         <p>Logged in as <strong id="currentUsername"></strong></p>
         <p class="hint">You're connected and ready to chat!</p>
+        <button onclick="logout()" class="btn btn-logout" title="Logout">
+          🚪 Logout
+        </button>
       </div>
       
       <div class="users-section" id="usersSection">
         <h3>👥 Online Users (<span id="userCount">0</span>)</h3>
         <div class="users-list" id="usersList">
           <p class="no-users">No users online</p>
+        </div>
+      </div>
+      
+      <div class="theme-section">
+        <h3>🎨 Choose Theme</h3>
+        <div class="theme-selector">
+          <button class="theme-btn active" data-theme="professional" title="Professional Theme">
+            💼 Professional
+          </button>
+          <button class="theme-btn" data-theme="love" title="Love Theme">
+            💕 Love
+          </button>
+          <button class="theme-btn" data-theme="nature" title="Nature Theme">
+            🌿 Nature
+          </button>
         </div>
       </div>
       

@@ -22,6 +22,12 @@ let onlineUsers = new Map(); // socketId -> username
 // Track message reactions
 let messageReactions = new Map(); // messageId -> [{emoji, username}]
 
+// Track message delivery and read status
+let messageStatus = new Map(); // messageId -> {delivered: [usernames], read: [usernames]}
+
+// Track user sessions
+let userSessions = new Map(); // username -> {socketId, joinTime, lastSeen}
+
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -37,24 +43,43 @@ io.on('connection', (socket) => {
   // Handle user joining the chat
   socket.on('join', (data) => {
     const username = data.username || 'Anonymous';
+    const isReconnect = data.isReconnect || false;
     socket.username = username;
+    
+    // Check if user already has a session
+    const existingSession = userSessions.get(username);
+    if (existingSession && !isReconnect) {
+      // Update existing session
+      existingSession.socketId = socket.id;
+      existingSession.lastSeen = new Date().toISOString();
+      console.log(`[Rejoin] ${username} reconnected (${socket.id})`);
+    } else {
+      // Create new session
+      userSessions.set(username, {
+        socketId: socket.id,
+        joinTime: new Date().toISOString(),
+        lastSeen: new Date().toISOString()
+      });
+      
+      // Only show join message for new users
+      if (!isReconnect) {
+        const systemMessage = {
+          id: ++messageIdCounter,
+          type: 'system',
+          text: `${username} joined the chat`,
+          time: new Date().toISOString()
+        };
+        
+        addMessage(systemMessage);
+        io.emit('chatMessage', systemMessage);
+      }
+      
+      console.log(`[Join] ${username} joined (${socket.id})`);
+    }
     
     // Add to online users
     onlineUsers.set(socket.id, username);
-    
-    console.log(`[Join] ${username} joined (${socket.id})`);
     console.log(`[Users] Online users: ${onlineUsers.size}`);
-    
-    // Create and broadcast system message
-    const systemMessage = {
-      id: ++messageIdCounter,
-      type: 'system',
-      text: `${username} joined the chat`,
-      time: new Date().toISOString()
-    };
-    
-    addMessage(systemMessage);
-    io.emit('chatMessage', systemMessage);
     
     // Broadcast updated users list to all clients
     broadcastUsersList();
@@ -73,7 +98,8 @@ io.on('connection', (socket) => {
       type: data.type || 'user',
       user: socket.username,
       text: data.text || '',
-      time: new Date().toISOString()
+      time: new Date().toISOString(),
+      status: 'sent'
     };
     
     // Add image data if present
@@ -84,9 +110,29 @@ io.on('connection', (socket) => {
       console.log(`[Message] ${message.user}: ${message.text}`);
     }
     
+    // Initialize message status tracking
+    messageStatus.set(message.id, {
+      delivered: [],
+      read: []
+    });
+    
     // Add to in-memory storage and broadcast to all clients
     addMessage(message);
     io.emit('chatMessage', message);
+    
+    // Mark as delivered for sender immediately
+    setTimeout(() => {
+      const status = messageStatus.get(message.id);
+      if (status) {
+        status.delivered.push(socket.username);
+        socket.emit('messageStatusUpdate', {
+          messageId: message.id,
+          status: 'delivered',
+          deliveredTo: status.delivered,
+          readBy: status.read
+        });
+      }
+    }, 500);
   });
   
   // Handle message reactions
@@ -127,14 +173,70 @@ io.on('connection', (socket) => {
     if (!socket.username) return;
     
     const { messageId } = data;
-    console.log(`[Read] ${socket.username} read message ${messageId}`);
+    const status = messageStatus.get(messageId);
     
-    // Broadcast read receipt to message sender
-    socket.broadcast.emit('messageReadReceipt', {
-      messageId: messageId,
-      readBy: socket.username,
-      readAt: new Date().toISOString()
-    });
+    if (status) {
+      // Add to delivered if not already there
+      if (!status.delivered.includes(socket.username)) {
+        status.delivered.push(socket.username);
+      }
+      
+      // Add to read if not already there
+      if (!status.read.includes(socket.username)) {
+        status.read.push(socket.username);
+        console.log(`[Read] ${socket.username} read message ${messageId}`);
+        
+        // Broadcast status update to all clients
+        io.emit('messageStatusUpdate', {
+          messageId: messageId,
+          status: 'read',
+          deliveredTo: status.delivered,
+          readBy: status.read
+        });
+      }
+    }
+  });
+  
+  // Handle message delivery confirmation
+  socket.on('messageDelivered', (data) => {
+    if (!socket.username) return;
+    
+    const { messageId } = data;
+    const status = messageStatus.get(messageId);
+    
+    if (status && !status.delivered.includes(socket.username)) {
+      status.delivered.push(socket.username);
+      console.log(`[Delivered] Message ${messageId} delivered to ${socket.username}`);
+      
+      // Broadcast delivery status to sender
+      io.emit('messageStatusUpdate', {
+        messageId: messageId,
+        status: 'delivered',
+        deliveredTo: status.delivered,
+        readBy: status.read
+      });
+    }
+  });
+  
+  // Handle user logout
+  socket.on('logout', () => {
+    if (socket.username) {
+      console.log(`[Logout] ${socket.username} logged out`);
+      
+      // Remove session
+      userSessions.delete(socket.username);
+      
+      // Create and broadcast system message
+      const systemMessage = {
+        id: ++messageIdCounter,
+        type: 'system',
+        text: `${socket.username} left the chat`,
+        time: new Date().toISOString()
+      };
+      
+      addMessage(systemMessage);
+      io.emit('chatMessage', systemMessage);
+    }
   });
   
   // Handle user disconnection
