@@ -1,16 +1,32 @@
-# no-db-office-chat
+# 💬 Office Chat - Real-time Team Communication
 
-A real-time internal office chat application with in-memory message storage. No database required—perfect for quick team communication during work sessions.
+A modern, feature-rich office chat application with real-time messaging, emoji reactions, image sharing, and more. Built with Node.js, Socket.IO, and vanilla JavaScript.
 
-## Features
+## ✨ Features
 
-- Real-time messaging using Socket.IO
-- In-memory message storage (configurable message limit)
-- Clean, responsive web interface
-- System notifications for user join/leave events
-- No external dependencies for frontend
-- Docker support included
-- Production-ready with graceful shutdown
+### 🚀 Core Features
+- **Real-time messaging** with Socket.IO
+- **Emoji picker** with 500+ emojis in 9 categories
+- **Image sharing** with drag & drop support
+- **Message reactions** (Instagram-style)
+- **Read receipts** and message status
+- **Sound notifications** for new messages
+- **Desktop notifications** support
+- **Online users list** with avatars
+
+### 🎨 UI/UX
+- **Modern gradient design** with glass morphism
+- **Fully responsive** (mobile + desktop)
+- **Smooth animations** and transitions
+- **Dark theme support**
+- **Accessibility compliant**
+
+### 🔧 Technical
+- **In-memory storage** (no database required)
+- **Configurable message limit**
+- **Graceful shutdown handling**
+- **Docker support** included
+- **Production-ready** deployment
 
 ## Prerequisites
 

@@ -122,6 +122,21 @@ io.on('connection', (socket) => {
     });
   });
   
+  // Handle message read receipts
+  socket.on('messageRead', (data) => {
+    if (!socket.username) return;
+    
+    const { messageId } = data;
+    console.log(`[Read] ${socket.username} read message ${messageId}`);
+    
+    // Broadcast read receipt to message sender
+    socket.broadcast.emit('messageReadReceipt', {
+      messageId: messageId,
+      readBy: socket.username,
+      readAt: new Date().toISOString()
+    });
+  });
+  
   // Handle user disconnection
   socket.on('disconnect', () => {
     if (socket.username) {

@@ -236,8 +236,14 @@ function displayMessage(message, shouldScroll = true) {
                 <span class="message-time">${time}</span>
             </div>
             <div class="message-content">${escapeHtml(message.text)}</div>
-            <div class="message-reactions" id="reactions-${message.id}">
-                <button class="add-reaction-btn" onclick="showQuickReactions(event, ${message.id})" title="Add reaction">+</button>
+            <div class="message-footer">
+                <div class="message-reactions" id="reactions-${message.id}">
+                    <button class="add-reaction-btn" onclick="showQuickReactions(event, ${message.id})" title="Add reaction">+</button>
+                </div>
+                ${isCurrentUser ? `<div class="message-status" id="status-${message.id}">
+                    <span class="status-icon">✓</span>
+                    <span class="status-text">Sent</span>
+                </div>` : ''}
             </div>
         `;
     }
@@ -346,9 +352,10 @@ function initializeImageUpload() {
     };
 }
 
-// Show quick reactions
-function showQuickReactions(event, messageId) {
+// Show quick reactions - Fixed version
+window.showQuickReactions = function(event, messageId) {
     event.stopPropagation();
+    console.log('🎯 Opening reactions for message:', messageId);
     
     // Remove existing picker
     const existing = document.querySelector('.reaction-picker');
@@ -358,15 +365,34 @@ function showQuickReactions(event, messageId) {
     const picker = document.createElement('div');
     picker.className = 'reaction-picker';
     picker.style.position = 'fixed';
-    picker.style.left = event.clientX + 'px';
-    picker.style.top = (event.clientY - 50) + 'px';
+    picker.style.left = Math.min(event.clientX, window.innerWidth - 300) + 'px';
+    picker.style.top = Math.max(event.clientY - 60, 10) + 'px';
     picker.style.zIndex = '10000';
+    picker.style.background = 'white';
+    picker.style.borderRadius = '24px';
+    picker.style.padding = '8px';
+    picker.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+    picker.style.display = 'flex';
+    picker.style.gap = '4px';
     
     quickReactions.forEach(emoji => {
         const btn = document.createElement('button');
         btn.className = 'emoji-item';
         btn.textContent = emoji;
+        btn.style.width = '36px';
+        btn.style.height = '36px';
+        btn.style.border = 'none';
+        btn.style.background = 'transparent';
+        btn.style.borderRadius = '50%';
+        btn.style.cursor = 'pointer';
+        btn.style.fontSize = '18px';
+        btn.style.transition = 'all 0.2s ease';
+        
+        btn.onmouseover = () => btn.style.background = '#f0f0f0';
+        btn.onmouseout = () => btn.style.background = 'transparent';
+        
         btn.onclick = () => {
+            console.log('👍 Reacting with:', emoji);
             addReaction(messageId, emoji);
             picker.remove();
         };
@@ -375,12 +401,23 @@ function showQuickReactions(event, messageId) {
     
     document.body.appendChild(picker);
     
-    // Auto close
+    // Auto close after 5 seconds or on outside click
     setTimeout(() => {
-        document.onclick = function closeHandler() {
-            picker.remove();
-            document.onclick = null;
+        const closeHandler = (e) => {
+            if (!picker.contains(e.target)) {
+                picker.remove();
+                document.removeEventListener('click', closeHandler);
+            }
         };
+        document.addEventListener('click', closeHandler);
+        
+        // Auto close after 5 seconds
+        setTimeout(() => {
+            if (picker.parentNode) {
+                picker.remove();
+                document.removeEventListener('click', closeHandler);
+            }
+        }, 5000);
     }, 100);
 }
 
@@ -511,3 +548,91 @@ function scrollToBottom() {
 }
 
 console.log('✅ Complete Office Chat loaded successfully!');
+//
+ Update message status (delivered/seen)
+function updateMessageStatus(messageId, status) {
+    const statusElement = document.getElementById(`status-${messageId}`);
+    if (!statusElement) return;
+    
+    const statusIcon = statusElement.querySelector('.status-icon');
+    const statusText = statusElement.querySelector('.status-text');
+    
+    if (status === 'delivered') {
+        statusIcon.textContent = '✓';
+        statusText.textContent = 'Delivered';
+        statusElement.className = 'message-status delivered';
+    } else if (status === 'seen') {
+        statusIcon.textContent = '✓✓';
+        statusText.textContent = 'Seen';
+        statusElement.className = 'message-status seen';
+    }
+}
+
+// Display reactions on message
+function displayReactions(messageId, reactions) {
+    const reactionsContainer = document.getElementById(`reactions-${messageId}`);
+    if (!reactionsContainer) return;
+    
+    // Clear existing reactions (keep add button)
+    const addBtn = reactionsContainer.querySelector('.add-reaction-btn');
+    reactionsContainer.innerHTML = '';
+    
+    // Group reactions by emoji
+    const grouped = {};
+    reactions.forEach(r => {
+        if (!grouped[r.emoji]) {
+            grouped[r.emoji] = [];
+        }
+        grouped[r.emoji].push(r.username);
+    });
+    
+    // Display each reaction
+    Object.keys(grouped).forEach(emoji => {
+        const users = grouped[emoji];
+        const btn = document.createElement('button');
+        btn.className = 'reaction-btn';
+        if (users.includes(currentUsername)) {
+            btn.classList.add('reacted');
+        }
+        btn.innerHTML = `${emoji} <span class="reaction-count">${users.length}</span>`;
+        btn.title = users.join(', ');
+        btn.onclick = () => addReaction(messageId, emoji);
+        reactionsContainer.appendChild(btn);
+    });
+    
+    // Re-add the "+" button
+    if (addBtn) {
+        reactionsContainer.appendChild(addBtn);
+    }
+}
+
+// Enhanced sound with visual feedback
+function playNotificationSound() {
+    try {
+        // Add visual feedback
+        document.body.classList.add('sound-playing');
+        setTimeout(() => document.body.classList.remove('sound-playing'), 300);
+        
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // More pleasant notification sound
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.1);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.4);
+        
+        console.log('🔊 Notification sound played');
+    } catch (e) {
+        console.log('🔇 Audio not supported:', e);
+    }
+}
