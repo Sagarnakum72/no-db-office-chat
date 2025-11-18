@@ -1,0 +1,513 @@
+// Complete Office Chat Application - All Features Working
+console.log('🚀 Loading Complete Office Chat...');
+
+// Global variables
+let socket;
+let currentUsername = null;
+let isJoined = false;
+let notificationPermission = false;
+
+// Emoji database - simplified but complete
+const emojiCategories = {
+    smileys: ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '😎', '🤓', '🧐'],
+    gestures: ['👋', '🤚', '🖐️', '✋', '🖖', '👌', '🤌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '👇', '☝️', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌', '👐', '🤲', '🤝', '🙏'],
+    hearts: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❤️‍🔥', '❤️‍🩹', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟'],
+    animals: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐽', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🐔', '🐧', '🐦', '🐤', '🐣', '🐥', '🦆', '🦅', '🦉', '🦇'],
+    food: ['🍕', '🍔', '🍟', '🌭', '🍿', '🥓', '🥚', '🍳', '🧇', '🥞', '🍞', '🥐', '🥨', '🥯', '🥖', '🧀', '🥗', '🥙', '🥪', '🌮', '🌯', '🥫', '🍖', '🍗', '🥩', '🍠', '🥟', '🥠', '🥡', '🍱'],
+    activities: ['⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🏓', '🏸', '🏒', '🏑', '🥍', '🏏', '🥅', '⛳', '🏹', '🎣', '🤿', '🥊', '🥋', '🎽', '🛹', '🛼', '🛷', '⛸️', '🥌', '🎿'],
+    travel: ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🚚', '🚛', '🚜', '🚲', '🛵', '🏍️', '🛺', '🚨', '🚔', '🚍', '🚘', '🚖', '🚡', '🚠', '🚟', '🚃', '🚋', '🚞', '🚝', '🚄'],
+    objects: ['⌚', '📱', '📲', '💻', '⌨️', '🖥️', '🖨️', '🖱️', '🖲️', '🕹️', '💽', '💾', '💿', '📀', '📼', '📷', '📸', '📹', '🎥', '📽️', '🎞️', '📞', '☎️', '📟', '📠', '📺', '📻', '🎙️', '🎚️', '🎛️'],
+    symbols: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉️', '☸️', '✡️', '🔯', '🕎', '☯️', '☦️', '🛐', '⚛️', '🉑', '☢️', '☣️', '📴', '📳', '🈶', '🈚', '🈸', '🈺', '🈷️', '✴️', '🆚', '💮', '🉐', '㊙️', '㊗️', '🈴', '🈵', '🈹', '🈲', '🅰️', '🅱️', '🆎', '🆑', '🅾️', '🆘', '❌', '⭕', '🛑', '⛔', '📛', '🚫', '💯', '💢', '♨️', '🚷', '🚯', '🚳', '🚱', '🔞', '📵', '🚭', '❗', '❕', '❓', '❔', '‼️', '⁉️', '🔅', '🔆', '〽️', '⚠️', '🚸', '🔱', '⚜️', '🔰', '♻️', '✅', '🈯', '💹', '❇️', '✳️', '❎', '🌐', '💠', 'Ⓜ️', '🌀', '💤', '🏧', '🚾', '♿', '🅿️', '🈳', '🈂️', '🛂', '🛃', '🛄', '🛅', '🚹', '🚺', '🚼', '🚻', '🚮', '🎦', '📶', '🈁', '🔣', 'ℹ️', '🔤', '🔡', '🔠', '🆖', '🆗', '🆙', '🆒', '🆕', '🆓', '0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟', '🔢', '#️⃣', '*️⃣', '⏏️', '▶️', '⏸️', '⏯️', '⏹️', '⏺️', '⏭️', '⏮️', '⏩', '⏪', '⏫', '⏬', '◀️', '🔼', '🔽', '➡️', '⬅️', '⬆️', '⬇️', '↗️', '↘️', '↙️', '↖️', '↕️', '↔️', '↪️', '↩️', '⤴️', '⤵️', '🔀', '🔁', '🔂', '🔄', '🔃', '🎵', '🎶', '➕', '➖', '➗', '✖️', '♾️', '💲', '💱', '™️', '©️', '®️', '〰️', '➰', '➿', '🔚', '🔙', '🔛', '🔝', '🔜', '✔️', '☑️', '🔘', '🔴', '🟠', '🟡', '🟢', '🔵', '🟣', '⚫', '⚪', '🟤', '🔺', '🔻', '🔸', '🔹', '🔶', '🔷', '🔳', '🔲', '▪️', '▫️', '◾', '◽', '◼️', '◻️', '🟥', '🟧', '🟨', '🟩', '🟦', '🟪', '⬛', '⬜', '🟫', '🔈', '🔇', '🔉', '🔊', '🔔', '🔕', '📣', '📢', '💬', '💭', '🗯️', '♠️', '♣️', '♥️', '♦️', '🃏', '🎴', '🀄', '🔥', '💧', '🌊']
+};
+
+// Quick reactions for messages
+const quickReactions = ['❤️', '😂', '😮', '😢', '😡', '👍', '🔥'];
+
+// Wait for DOM to load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ DOM loaded, initializing chat...');
+    
+    // Initialize Socket.IO
+    initializeSocket();
+    
+    // Initialize UI handlers
+    initializeUI();
+    
+    // Initialize emoji picker
+    initializeEmojiPicker();
+    
+    // Initialize image upload
+    initializeImageUpload();
+    
+    console.log('🎉 Chat initialization complete!');
+});
+
+// Initialize Socket.IO connection
+function initializeSocket() {
+    console.log('🔌 Connecting to server...');
+    
+    socket = io({
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 5,
+        transports: ['websocket', 'polling'],
+        timeout: 10000
+    });
+    
+    // Connection events
+    socket.on('connect', function() {
+        console.log('✅ Connected! Socket ID:', socket.id);
+        updateConnectionStatus(true);
+    });
+    
+    socket.on('disconnect', function(reason) {
+        console.log('❌ Disconnected:', reason);
+        updateConnectionStatus(false);
+    });
+    
+    socket.on('connect_error', function(error) {
+        console.error('❌ Connection error:', error);
+        updateConnectionStatus(false);
+    });
+    
+    // Chat events
+    socket.on('chatMessage', function(message) {
+        console.log('📨 Received:', message);
+        displayMessage(message);
+        
+        // Notifications and sounds
+        if (message.type === 'user' && message.user !== currentUsername) {
+            playNotificationSound();
+            showNotification(`New message from ${message.user}`, message.text);
+        } else if (message.type === 'system') {
+            playNotificationSound();
+        }
+    });
+    
+    socket.on('usersList', function(users) {
+        console.log('👥 Users update:', users);
+        updateUsersList(users);
+    });
+}
+
+// Initialize UI event handlers
+function initializeUI() {
+    const joinBtn = document.getElementById('joinBtn');
+    const usernameInput = document.getElementById('usernameInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const messageInput = document.getElementById('messageInput');
+    
+    // Join button
+    if (joinBtn && usernameInput) {
+        joinBtn.onclick = handleJoin;
+        usernameInput.onkeypress = function(e) {
+            if (e.key === 'Enter') handleJoin();
+        };
+    }
+    
+    // Send message
+    if (sendBtn && messageInput) {
+        sendBtn.onclick = sendMessage;
+        messageInput.onkeypress = function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage();
+            }
+        };
+    }
+}
+
+// Handle join chat
+function handleJoin() {
+    const usernameInput = document.getElementById('usernameInput');
+    const username = usernameInput.value.trim();
+    
+    if (!username) {
+        alert('Please enter your name');
+        return;
+    }
+    
+    if (username.length > 30) {
+        alert('Name is too long (max 30 characters)');
+        return;
+    }
+    
+    currentUsername = username;
+    isJoined = true;
+    
+    // Request notification permission
+    requestNotificationPermission();
+    
+    // Join server
+    socket.emit('join', { username: username });
+    
+    // Update UI
+    updateUIAfterJoin(username);
+    
+    // Load messages
+    loadExistingMessages();
+    
+    console.log('🎯 Joined as:', username);
+}
+
+// Update UI after joining
+function updateUIAfterJoin(username) {
+    const joinSection = document.getElementById('joinSection');
+    const userInfo = document.getElementById('userInfo');
+    const currentUsernameSpan = document.getElementById('currentUsername');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const emojiBtn = document.getElementById('emojiBtn');
+    const imageBtn = document.getElementById('imageBtn');
+    
+    if (joinSection) joinSection.style.display = 'none';
+    if (userInfo) userInfo.style.display = 'block';
+    if (currentUsernameSpan) currentUsernameSpan.textContent = username;
+    if (messageInput) messageInput.disabled = false;
+    if (sendBtn) sendBtn.disabled = false;
+    if (emojiBtn) emojiBtn.disabled = false;
+    if (imageBtn) imageBtn.disabled = false;
+    if (messageInput) messageInput.focus();
+}
+
+// Send message
+function sendMessage() {
+    const messageInput = document.getElementById('messageInput');
+    if (!messageInput) return;
+    
+    const text = messageInput.value.trim();
+    if (!text || !isJoined) return;
+    
+    console.log('📤 Sending:', text);
+    socket.emit('chatMessage', { text: text });
+    
+    messageInput.value = '';
+    messageInput.focus();
+}
+
+// Load existing messages
+function loadExistingMessages() {
+    fetch('/messages')
+        .then(res => res.json())
+        .then(messages => {
+            const messagesList = document.getElementById('messagesList');
+            if (messagesList) {
+                messagesList.innerHTML = '';
+                messages.forEach(msg => displayMessage(msg, false));
+                scrollToBottom();
+            }
+        })
+        .catch(err => console.error('Error loading messages:', err));
+}
+
+// Display message
+function displayMessage(message, shouldScroll = true) {
+    const messagesList = document.getElementById('messagesList');
+    if (!messagesList) return;
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message';
+    messageDiv.dataset.messageId = message.id;
+    
+    if (message.type === 'system') {
+        messageDiv.classList.add('system-message');
+        messageDiv.innerHTML = `<div class="message-content">${escapeHtml(message.text)}</div>`;
+    } else if (message.type === 'image') {
+        const isCurrentUser = message.user === currentUsername;
+        messageDiv.classList.add(isCurrentUser ? 'user-message' : 'other-message');
+        const time = formatTime(message.time);
+        messageDiv.innerHTML = `
+            <div class="message-header">
+                <span class="message-user">${escapeHtml(message.user)}</span>
+                <span class="message-time">${time}</span>
+            </div>
+            <div class="message-content">
+                ${message.text ? `<p>${escapeHtml(message.text)}</p>` : ''}
+                <img src="${message.image}" class="message-image" alt="Shared image" onclick="window.open('${message.image}', '_blank')">
+            </div>
+        `;
+    } else {
+        const isCurrentUser = message.user === currentUsername;
+        messageDiv.classList.add(isCurrentUser ? 'user-message' : 'other-message');
+        const time = formatTime(message.time);
+        messageDiv.innerHTML = `
+            <div class="message-header">
+                <span class="message-user">${escapeHtml(message.user)}</span>
+                <span class="message-time">${time}</span>
+            </div>
+            <div class="message-content">${escapeHtml(message.text)}</div>
+            <div class="message-reactions" id="reactions-${message.id}">
+                <button class="add-reaction-btn" onclick="showQuickReactions(event, ${message.id})" title="Add reaction">+</button>
+            </div>
+        `;
+    }
+    
+    messagesList.appendChild(messageDiv);
+    
+    if (shouldScroll) scrollToBottom();
+}
+
+// Initialize emoji picker
+function initializeEmojiPicker() {
+    const emojiBtn = document.getElementById('emojiBtn');
+    const emojiPicker = document.getElementById('emojiPicker');
+    
+    if (!emojiBtn || !emojiPicker) return;
+    
+    // Populate emoji grids
+    Object.keys(emojiCategories).forEach(category => {
+        const grid = document.getElementById(`${category}-grid`);
+        if (grid) {
+            emojiCategories[category].forEach(emoji => {
+                const btn = document.createElement('button');
+                btn.className = 'emoji-item';
+                btn.textContent = emoji;
+                btn.onclick = () => {
+                    const messageInput = document.getElementById('messageInput');
+                    if (messageInput) {
+                        messageInput.value += emoji;
+                        messageInput.focus();
+                    }
+                };
+                grid.appendChild(btn);
+            });
+        }
+    });
+    
+    // Emoji picker toggle
+    emojiBtn.onclick = function() {
+        const isVisible = emojiPicker.style.display === 'block';
+        emojiPicker.style.display = isVisible ? 'none' : 'block';
+    };
+    
+    // Tab switching
+    document.querySelectorAll('.emoji-tab').forEach(tab => {
+        tab.onclick = function() {
+            const category = this.dataset.category;
+            
+            // Update active tab
+            document.querySelectorAll('.emoji-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update active category
+            document.querySelectorAll('.emoji-category').forEach(c => c.classList.remove('active'));
+            const targetCategory = document.querySelector(`.emoji-category[data-category="${category}"]`);
+            if (targetCategory) targetCategory.classList.add('active');
+        };
+    });
+    
+    // Close on outside click
+    document.onclick = function(e) {
+        if (!emojiBtn.contains(e.target) && !emojiPicker.contains(e.target)) {
+            emojiPicker.style.display = 'none';
+        }
+    };
+}
+
+// Initialize image upload
+function initializeImageUpload() {
+    const imageBtn = document.getElementById('imageBtn');
+    const imageInput = document.getElementById('imageInput');
+    
+    if (!imageBtn || !imageInput) return;
+    
+    imageBtn.onclick = () => imageInput.click();
+    
+    imageInput.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        // Validate file
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Image too large! Maximum size is 5MB.');
+            return;
+        }
+        
+        if (!file.type.startsWith('image/')) {
+            alert('Please select an image file.');
+            return;
+        }
+        
+        // Convert to base64 and send
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const imageData = event.target.result;
+            socket.emit('chatMessage', {
+                type: 'image',
+                image: imageData,
+                text: ''
+            });
+            console.log('📷 Image sent');
+        };
+        reader.readAsDataURL(file);
+        
+        // Reset input
+        imageInput.value = '';
+    };
+}
+
+// Show quick reactions
+function showQuickReactions(event, messageId) {
+    event.stopPropagation();
+    
+    // Remove existing picker
+    const existing = document.querySelector('.reaction-picker');
+    if (existing) existing.remove();
+    
+    // Create picker
+    const picker = document.createElement('div');
+    picker.className = 'reaction-picker';
+    picker.style.position = 'fixed';
+    picker.style.left = event.clientX + 'px';
+    picker.style.top = (event.clientY - 50) + 'px';
+    picker.style.zIndex = '10000';
+    
+    quickReactions.forEach(emoji => {
+        const btn = document.createElement('button');
+        btn.className = 'emoji-item';
+        btn.textContent = emoji;
+        btn.onclick = () => {
+            addReaction(messageId, emoji);
+            picker.remove();
+        };
+        picker.appendChild(btn);
+    });
+    
+    document.body.appendChild(picker);
+    
+    // Auto close
+    setTimeout(() => {
+        document.onclick = function closeHandler() {
+            picker.remove();
+            document.onclick = null;
+        };
+    }, 100);
+}
+
+// Add reaction to message
+function addReaction(messageId, emoji) {
+    if (!isJoined) return;
+    console.log('👍 Adding reaction:', emoji, 'to message:', messageId);
+    socket.emit('messageReaction', {
+        messageId: messageId,
+        emoji: emoji,
+        username: currentUsername
+    });
+}
+
+// Update connection status
+function updateConnectionStatus(connected) {
+    const statusText = document.getElementById('statusText');
+    const statusDot = document.querySelector('.status-dot');
+    
+    if (statusText && statusDot) {
+        if (connected) {
+            statusText.textContent = 'Connected';
+            statusDot.classList.add('connected');
+        } else {
+            statusText.textContent = 'Connecting...';
+            statusDot.classList.remove('connected');
+        }
+    }
+}
+
+// Update users list
+function updateUsersList(users) {
+    const usersList = document.getElementById('usersList');
+    const userCount = document.getElementById('userCount');
+    
+    if (userCount) userCount.textContent = users.length;
+    if (!usersList) return;
+    
+    if (users.length === 0) {
+        usersList.innerHTML = '<p class="no-users">No users online</p>';
+        return;
+    }
+    
+    usersList.innerHTML = '';
+    users.forEach(username => {
+        const userItem = document.createElement('div');
+        userItem.className = 'user-item';
+        const initial = username.charAt(0).toUpperCase();
+        const isCurrentUser = username === currentUsername;
+        
+        userItem.innerHTML = `
+            <div class="user-avatar">${initial}</div>
+            <div class="user-name">${escapeHtml(username)}${isCurrentUser ? ' (You)' : ''}</div>
+            <div class="user-status"></div>
+        `;
+        
+        usersList.appendChild(userItem);
+    });
+}
+
+// Request notification permission
+function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+            notificationPermission = permission === 'granted';
+        });
+    } else if (Notification.permission === 'granted') {
+        notificationPermission = true;
+    }
+}
+
+// Show desktop notification
+function showNotification(title, body) {
+    if (notificationPermission && document.hidden) {
+        new Notification(title, {
+            body: body,
+            icon: '/favicon.ico',
+            badge: '/favicon.ico',
+            tag: 'chat-message',
+            requireInteraction: false
+        });
+    }
+}
+
+// Play notification sound
+function playNotificationSound() {
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+    } catch (e) {
+        console.log('🔇 Audio not supported');
+    }
+}
+
+// Utility functions
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatTime(isoString) {
+    const date = new Date(isoString);
+    return date.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+}
+
+function scrollToBottom() {
+    const container = document.getElementById('messagesContainer');
+    if (container) {
+        container.scrollTop = container.scrollHeight;
+    }
+}
+
+console.log('✅ Complete Office Chat loaded successfully!');

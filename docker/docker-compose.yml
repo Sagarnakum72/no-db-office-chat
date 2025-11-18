@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  chat:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: no-db-office-chat
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MAX_MESSAGES=200
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/messages', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - chat-network
+
+networks:
+  chat-network:
+    driver: bridge

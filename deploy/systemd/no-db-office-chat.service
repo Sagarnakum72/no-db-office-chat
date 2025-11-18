@@ -1,0 +1,49 @@
+# Systemd service unit file for no-db-office-chat
+# 
+# Installation:
+# 1. Edit this file to set correct paths and user
+# 2. Copy to /etc/systemd/system/no-db-office-chat.service
+# 3. Run: sudo systemctl daemon-reload
+# 4. Run: sudo systemctl enable no-db-office-chat
+# 5. Run: sudo systemctl start no-db-office-chat
+#
+# Check status: sudo systemctl status no-db-office-chat
+# View logs: sudo journalctl -u no-db-office-chat -f
+
+[Unit]
+Description=no-db-office-chat - Real-time office chat application
+Documentation=https://github.com/yourusername/no-db-office-chat
+After=network.target
+
+[Service]
+Type=simple
+User=nodejs
+Group=nodejs
+WorkingDirectory=/opt/no-db-office-chat
+ExecStart=/usr/bin/node server.js
+
+# Environment variables
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=MAX_MESSAGES=200
+
+# Restart policy
+Restart=on-failure
+RestartSec=10
+KillMode=process
+KillSignal=SIGTERM
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/no-db-office-chat
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=no-db-office-chat
+
+[Install]
+WantedBy=multi-user.target
