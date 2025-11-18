@@ -329,14 +329,31 @@ function sendMessage() {
 
 // Load existing messages
 function loadExistingMessages() {
+    // First load from localStorage (saved messages)
+    const savedMessages = loadMessagesFromLocalStorage();
+    const messagesList = document.getElementById('messagesList');
+    
+    if (messagesList && savedMessages.length > 0) {
+        messagesList.innerHTML = '';
+        savedMessages.forEach(msg => {
+            displayMessageWithoutSaving(msg, false);
+        });
+        scrollToBottom();
+        console.log('📦 Loaded', savedMessages.length, 'messages from local storage');
+    }
+    
+    // Then fetch new messages from server
     fetch('/messages')
         .then(res => res.json())
         .then(messages => {
-            const messagesList = document.getElementById('messagesList');
-            if (messagesList) {
-                messagesList.innerHTML = '';
-                messages.forEach(msg => displayMessage(msg, false));
+            if (messagesList && messages.length > 0) {
+                // Only add new messages that aren't already displayed
+                const existingIds = savedMessages.map(m => m.id);
+                const newMessages = messages.filter(m => !existingIds.includes(m.id));
+                
+                newMessages.forEach(msg => displayMessage(msg, false));
                 scrollToBottom();
+                console.log('📥 Loaded', newMessages.length, 'new messages from server');
             }
         })
         .catch(err => console.error('Error loading messages:', err));
@@ -346,6 +363,9 @@ function loadExistingMessages() {
 function displayMessage(message, shouldScroll = true) {
     const messagesList = document.getElementById('messagesList');
     if (!messagesList) return;
+    
+    // Save message to localStorage for persistence
+    saveMessageToLocalStorage(message);
     
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message';
@@ -703,6 +723,104 @@ function playNotificationSound() {
         console.log('🔇 Audio not supported:', e.message);
     }
 }
+
+// Save message to localStorage
+function saveMessageToLocalStorage(message) {
+    try {
+        const messages = loadMessagesFromLocalStorage();
+        
+        // Check if message already exists
+        const exists = messages.some(m => m.id === message.id);
+        if (exists) return;
+        
+        // Add new message
+        messages.push(message);
+        
+        // Keep only last 500 messages to avoid storage limits
+        if (messages.length > 500) {
+            messages.splice(0, messages.length - 500);
+        }
+        
+        localStorage.setItem('chatMessages', JSON.stringify(messages));
+        console.log('💾 Message saved to localStorage');
+    } catch (e) {
+        console.error('Error saving message:', e);
+    }
+}
+
+// Load messages from localStorage
+function loadMessagesFromLocalStorage() {
+    try {
+        const stored = localStorage.getItem('chatMessages');
+        return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+        console.error('Error loading messages:', e);
+        return [];
+    }
+}
+
+// Display message without saving (to avoid duplicates)
+function displayMessageWithoutSaving(message, shouldScroll = true) {
+    const messagesList = document.getElementById('messagesList');
+    if (!messagesList) return;
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message';
+    messageDiv.dataset.messageId = message.id;
+    
+    if (message.type === 'system') {
+        messageDiv.classList.add('system-message');
+        messageDiv.innerHTML = `<div class="message-content">${escapeHtml(message.text)}</div>`;
+    } else if (message.type === 'image') {
+        const isCurrentUser = message.user === currentUsername;
+        messageDiv.classList.add(isCurrentUser ? 'user-message' : 'other-message');
+        const time = formatTime(message.time);
+        messageDiv.innerHTML = `
+            <div class="message-header">
+                <span class="message-user">${escapeHtml(message.user)}</span>
+                <span class="message-time">${time}</span>
+            </div>
+            <div class="message-content">
+                ${message.text ? `<p>${escapeHtml(message.text)}</p>` : ''}
+                <img src="${message.image}" class="message-image" alt="Shared image" onclick="window.open('${message.image}', '_blank')">
+            </div>
+        `;
+    } else {
+        const isCurrentUser = message.user === currentUsername;
+        messageDiv.classList.add(isCurrentUser ? 'user-message' : 'other-message');
+        const time = formatTime(message.time);
+        
+        messageDiv.innerHTML = `
+            <div class="message-header">
+                <span class="message-user">${escapeHtml(message.user)}</span>
+                <span class="message-time">${time}</span>
+            </div>
+            <div class="message-content">${escapeHtml(message.text)}</div>
+            <div class="message-reactions" id="reactions-${message.id}">
+                <button class="add-reaction-btn" onclick="showQuickReactions(event, ${message.id})" title="Add reaction">+</button>
+            </div>
+            ${isCurrentUser ? `<div class="message-status" id="status-${message.id}">
+                <span class="status-icon">✓</span>
+                <span class="status-text">Sent</span>
+            </div>` : ''}
+        `;
+    }
+    
+    messagesList.appendChild(messageDiv);
+    if (shouldScroll) scrollToBottom();
+}
+
+// Clear chat history (optional function for future use)
+window.clearChatHistory = function() {
+    if (confirm('Are you sure you want to clear all chat history?')) {
+        localStorage.removeItem('chatMessages');
+        const messagesList = document.getElementById('messagesList');
+        if (messagesList) {
+            messagesList.innerHTML = '<div class="welcome-message"><p>👋 Chat history cleared!</p></div>';
+        }
+        console.log('🗑️ Chat history cleared');
+    }
+};
 
 // Utility functions
 function escapeHtml(text) {
